@@ -1,0 +1,361 @@
+@import "tailwindcss";
+
+@theme {
+  /* ─────────────────────────────────────────
+     COLORS
+  ───────────────────────────────────────── */
+
+  --color-parchment: #f7f4ef;
+  --color-bone: #ede7de;
+  --color-sand: #d8cbb9;
+
+  --color-terracotta: #c2593f;
+  --color-burnt-amber: #a94b32;
+
+  --color-sage: #8b9275;
+
+  --color-brass: #b5965a;
+  --color-brass-light: #c8ad78;
+
+  --color-oak: #1c1917;
+  --color-midnight-oak: #14110f;
+
+  --color-ink: #292522;
+  --color-smoke: #6d665e;
+
+  /* ─────────────────────────────────────────
+     TYPOGRAPHY
+     
+     These variables are injected by next/font
+     in app/layout.tsx.
+  ───────────────────────────────────────── */
+
+  --font-display: var(--font-playfair);
+  --font-sans: var(--font-jakarta);
+
+  /* ─────────────────────────────────────────
+     SPACING
+  ───────────────────────────────────────── */
+
+  --spacing-section: 8rem;
+  --spacing-section-lg: 12rem;
+
+  /* ─────────────────────────────────────────
+     RADIUS
+  ───────────────────────────────────────── */
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+
+  /* ─────────────────────────────────────────
+     SHADOWS
+  ───────────────────────────────────────── */
+
+  --shadow-editorial: 0 24px 80px rgba(20, 17, 15, 0.12);
+
+  --shadow-floating: 0 16px 50px rgba(20, 17, 15, 0.18);
+}
+
+
+/* ─────────────────────────────────────────────
+   ROOT
+───────────────────────────────────────────── */
+
+:root {
+  --background: #f7f4ef;
+  --foreground: #292522;
+
+  --surface: #ede7de;
+  --surface-dark: #1c1917;
+
+  --accent: #c2593f;
+  --accent-secondary: #8b9275;
+  --accent-metallic: #b5965a;
+
+  --border: rgba(41, 37, 34, 0.14);
+  --border-light: rgba(247, 244, 239, 0.16);
+
+  --muted: #6d665e;
+
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+/* ─────────────────────────────────────────────
+   BASE
+───────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+  background: var(--background);
+}
+
+body {
+  margin: 0;
+
+  background:
+    radial-gradient(
+      circle at 20% 0%,
+      rgba(194, 89, 63, 0.035),
+      transparent 30%
+    ),
+    var(--background);
+
+  color: var(--foreground);
+
+  font-family: var(--font-sans);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  text-rendering: optimizeLegibility;
+}
+
+
+/* ─────────────────────────────────────────────
+   SELECTION
+───────────────────────────────────────────── */
+
+::selection {
+  background: var(--accent);
+  color: var(--background);
+}
+
+
+/* ─────────────────────────────────────────────
+   TYPOGRAPHY
+───────────────────────────────────────────── */
+
+/*
+  Display typography.
+
+  Used for:
+  - Hero headlines
+  - Section titles
+  - Large editorial statements
+  - Service names
+*/
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.text-editorial {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+}
+
+
+/*
+  Small uppercase editorial metadata.
+
+  Used for:
+  - Navigation labels
+  - Section eyebrows
+  - Categories
+  - Status labels
+*/
+
+.text-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+
+/*
+  General UI labels.
+*/
+
+.text-label {
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+
+/*
+  Pricing and compact numerical information.
+*/
+
+.text-price {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+
+/* ─────────────────────────────────────────────
+   EDITORIAL CONTAINER
+───────────────────────────────────────────── */
+
+.editorial-container {
+  width: min(100% - 3rem, 1440px);
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .editorial-container {
+    width: min(100% - 5rem, 1440px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .editorial-container {
+    width: min(100% - 8rem, 1440px);
+  }
+}
+
+
+/* ─────────────────────────────────────────────
+   SECTION SPACING
+───────────────────────────────────────────── */
+
+.section {
+  padding-block: var(--spacing-section);
+}
+
+.section-lg {
+  padding-block: var(--spacing-section-lg);
+}
+
+
+/* ─────────────────────────────────────────────
+   SURFACES
+───────────────────────────────────────────── */
+
+.surface-parchment {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.surface-bone {
+  background-color: var(--surface);
+  color: var(--foreground);
+}
+
+.surface-oak {
+  background-color: var(--surface-dark);
+  color: var(--background);
+}
+
+.surface-terracotta {
+  background-color: var(--accent);
+  color: var(--background);
+}
+
+
+/* ─────────────────────────────────────────────
+   HAIRLINE BORDERS
+───────────────────────────────────────────── */
+
+.hairline {
+  border: 1px solid var(--border);
+}
+
+.hairline-light {
+  border: 1px solid var(--border-light);
+}
+
+
+/* ─────────────────────────────────────────────
+   IMAGE TREATMENT
+───────────────────────────────────────────── */
+
+.image-editorial {
+  position: relative;
+  overflow: hidden;
+}
+
+.image-editorial img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  transition:
+    transform 1.2s var(--ease-editorial),
+    filter 1.2s var(--ease-editorial);
+}
+
+.image-editorial:hover img {
+  transform: scale(1.035);
+}
+
+
+/* ─────────────────────────────────────────────
+   GRAIN
+───────────────────────────────────────────── */
+
+.grain {
+  position: relative;
+}
+
+.grain::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  opacity: 0.035;
+
+  background-image: url("/textures/noise.png");
+
+  mix-blend-mode: multiply;
+}
+
+
+/* ─────────────────────────────────────────────
+   MAGNETIC BUTTON FOUNDATION
+───────────────────────────────────────────── */
+
+.magnetic {
+  position: relative;
+  isolation: isolate;
+
+  transition:
+    transform 500ms var(--ease-editorial),
+    background-color 400ms var(--ease-editorial),
+    color 400ms var(--ease-editorial);
+}
+
+
+/* ─────────────────────────────────────────────
+   FOCUS
+───────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 4px;
+}
+
+
+/* ─────────────────────────────────────────────
+   REDUCED MOTION
+───────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
