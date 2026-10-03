@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 import {
   calculateEndTime,
@@ -333,7 +333,7 @@ export async function createAppointment(
    * --------------------------------------------------------
    */
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   /*
    * --------------------------------------------------------

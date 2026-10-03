@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: "Invalid booking request.",
-          details: validation.error.flatten(),
+          details: validation.error || "An error occurred",
         },
         {
           status: 400,

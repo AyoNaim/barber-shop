@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         {
           success: false,
           error: "Invalid availability request.",
-          details: validation.error.flatten(),
+          details: validation.error || "An error occurred",
         },
         {
           status: 400,

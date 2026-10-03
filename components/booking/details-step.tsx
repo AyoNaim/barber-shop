@@ -64,6 +64,8 @@ function validateDetails(
 ): FieldErrors {
   const errors: FieldErrors = {};
 
+  if (!details.customerNotes) return null;
+
   if (details.customerName.trim().length < 2) {
     errors.customerName = "Please enter your name.";
   }

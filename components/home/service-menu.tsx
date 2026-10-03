@@ -549,7 +549,7 @@ export function ServiceMenu() {
               </p>
 
               <motion.a
-                href="#booking"
+                href="/booking"
                 whileHover={{
                   y: -3,
                 }}

@@ -238,7 +238,7 @@ export function ClosingCta() {
               </p>
 
               <motion.a
-                href="#booking"
+                href="/booking"
                 whileHover={{
                   y: -3,
                 }}

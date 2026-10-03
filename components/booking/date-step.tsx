@@ -21,13 +21,13 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 const DAYS_TO_SHOW = 21;
 
-type BookingSlot = {
+export type BookingSlot = {
   startTime: string;
   endTime: string;
   barberId: string;
 };
 
-type AvailabilityResponse = {
+export type AvailabilityResponse = {
   success: boolean;
   data?: {
     date: string;
@@ -38,7 +38,7 @@ type AvailabilityResponse = {
   error?: string;
 };
 
-type DateStepProps = {
+export type DateStepProps = {
   serviceId: string;
   barberId: string | null;
   selectedDate: string | null;
@@ -48,7 +48,7 @@ type DateStepProps = {
   onContinue?: () => void;
 };
 
-type DateOption = {
+export type DateOption = {
   value: string;
   weekday: string;
   day: string;
@@ -89,11 +89,26 @@ export function DateStep({
     visibleStart + 7,
   );
 
+  const selectedDateOption = dates.find(
+    (date) => date.value === selectedDate,
+  );
+
   useEffect(() => {
     if (!selectedDate || !serviceId) {
       setSlots([]);
+      setError(null);
+      setIsLoading(false);
       return;
     }
+
+    /*
+     * TypeScript now knows this is a string.
+     *
+     * The previous code passed `selectedDate`
+     * directly into URLSearchParams, but its
+     * declared type is `string | null`.
+     */
+    const date = selectedDate;
 
     let cancelled = false;
 
@@ -105,7 +120,7 @@ export function DateStep({
 
         const params = new URLSearchParams({
           serviceId,
-          date: selectedDate,
+          date,
         });
 
         if (barberId) {
@@ -126,8 +141,16 @@ export function DateStep({
           },
         );
 
-        const result =
-          (await response.json()) as AvailabilityResponse;
+        let result: AvailabilityResponse;
+
+        try {
+          result =
+            (await response.json()) as AvailabilityResponse;
+        } catch {
+          throw new Error(
+            "The availability service returned an invalid response.",
+          );
+        }
 
         if (
           !response.ok ||
@@ -162,7 +185,7 @@ export function DateStep({
       }
     }
 
-    loadAvailability();
+    void loadAvailability();
 
     return () => {
       cancelled = true;
@@ -173,11 +196,12 @@ export function DateStep({
     selectedDate,
   ]);
 
-  function moveDates(direction: -1 | 1) {
+  function moveDates(
+    direction: -1 | 1,
+  ) {
     setVisibleStart((current) => {
       const next =
-        current +
-        direction * 7;
+        current + direction * 7;
 
       return Math.max(
         0,
@@ -192,8 +216,89 @@ export function DateStep({
     });
   }
 
+  function retryAvailability() {
+    if (!selectedDate) {
+      return;
+    }
+
+    /*
+     * Re-selecting the same date does not change
+     * the dependency array, so we force the
+     * request by clearing the current error and
+     * fetching directly.
+     */
+    setError(null);
+    setSlots([]);
+    setIsLoading(true);
+
+    const date = selectedDate;
+
+    void (async () => {
+      try {
+        const params = new URLSearchParams({
+          serviceId,
+          date,
+        });
+
+        if (barberId) {
+          params.set(
+            "barberId",
+            barberId,
+          );
+        }
+
+        const response = await fetch(
+          `/api/booking/availability?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+            cache: "no-store",
+          },
+        );
+
+        let result: AvailabilityResponse;
+
+        try {
+          result =
+            (await response.json()) as AvailabilityResponse;
+        } catch {
+          throw new Error(
+            "The availability service returned an invalid response.",
+          );
+        }
+
+        if (
+          !response.ok ||
+          !result.success ||
+          !result.data
+        ) {
+          throw new Error(
+            result.error ??
+              "Unable to load available times.",
+          );
+        }
+
+        setSlots(result.data.slots);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load available times.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }
+
   return (
     <section aria-labelledby="booking-date-title">
+      {/* ─────────────────────────────────────
+          INTRO
+      ───────────────────────────────────── */}
+
       <motion.div
         initial={{
           opacity: 0,
@@ -242,11 +347,17 @@ export function DateStep({
         </p>
       </motion.div>
 
-      {/* Date rail */}
+      {/* ─────────────────────────────────────
+          DATE RAIL
+      ───────────────────────────────────── */}
+
       <div className="mt-12">
         <div className="mb-5 flex items-center justify-between">
           <p className="text-label text-smoke">
-            October · 2026
+            {formatMonthLabel(
+              visibleDates[0]?.value ??
+                dates[0]?.value,
+            )}
           </p>
 
           <div className="flex items-center gap-2">
@@ -256,7 +367,9 @@ export function DateStep({
               onClick={() =>
                 moveDates(-1)
               }
-              icon={<ArrowLeft size={15} />}
+              icon={
+                <ArrowLeft size={15} />
+              }
             />
 
             <DateNavigationButton
@@ -304,7 +417,10 @@ export function DateStep({
         </div>
       </div>
 
-      {/* Availability */}
+      {/* ─────────────────────────────────────
+          AVAILABILITY
+      ───────────────────────────────────── */}
+
       <div className="mt-12">
         <AnimatePresence mode="wait">
           {!selectedDate && (
@@ -347,7 +463,9 @@ export function DateStep({
           )}
 
           {selectedDate && isLoading && (
-            <AvailabilityLoading key="loading" />
+            <AvailabilityLoading
+              key="loading"
+            />
           )}
 
           {selectedDate &&
@@ -356,11 +474,7 @@ export function DateStep({
               <AvailabilityError
                 key="error"
                 message={error}
-                onRetry={() => {
-                  onSelectDate(
-                    selectedDate,
-                  );
-                }}
+                onRetry={retryAvailability}
               />
             )}
 
@@ -391,7 +505,10 @@ export function DateStep({
         </AnimatePresence>
       </div>
 
-      {/* Selected appointment */}
+      {/* ─────────────────────────────────────
+          SELECTED APPOINTMENT
+      ───────────────────────────────────── */}
+
       <AnimatePresence>
         {selectedDate &&
           selectedTime && (
@@ -425,7 +542,7 @@ export function DateStep({
                     Your appointment
                   </p>
 
-                  <div className="mt-3 flex items-baseline gap-3">
+                  <div className="mt-3 flex flex-wrap items-baseline gap-3">
                     <span className="font-display text-2xl tracking-[-0.025em] text-ink">
                       {formatLongDate(
                         selectedDate,
@@ -492,6 +609,11 @@ export function DateStep({
   );
 }
 
+
+/* ─────────────────────────────────────────────
+   DATE OPTION
+───────────────────────────────────────────── */
+
 function DateOptionButton({
   date,
   selected,
@@ -522,10 +644,9 @@ function DateOptionButton({
         ease: EASE,
       }}
       whileHover={{
-        backgroundColor:
-          selected
-            ? undefined
-            : "rgba(216, 203, 185, 0.22)",
+        backgroundColor: selected
+          ? undefined
+          : "rgba(216, 203, 185, 0.22)",
       }}
       className="
         group
@@ -607,6 +728,11 @@ function DateOptionButton({
     </motion.button>
   );
 }
+
+
+/* ─────────────────────────────────────────────
+   AVAILABILITY GRID
+───────────────────────────────────────────── */
 
 function AvailabilityGrid({
   slots,
@@ -762,10 +888,14 @@ function AvailabilityGrid({
   );
 }
 
+
+/* ─────────────────────────────────────────────
+   LOADING
+───────────────────────────────────────────── */
+
 function AvailabilityLoading() {
   return (
     <motion.div
-      key="loading"
       initial={{
         opacity: 0,
       }}
@@ -797,6 +927,11 @@ function AvailabilityLoading() {
     </motion.div>
   );
 }
+
+
+/* ─────────────────────────────────────────────
+   ERROR
+───────────────────────────────────────────── */
 
 function AvailabilityError({
   message,
@@ -850,6 +985,11 @@ function AvailabilityError({
   );
 }
 
+
+/* ─────────────────────────────────────────────
+   EMPTY
+───────────────────────────────────────────── */
+
 function NoAvailability() {
   return (
     <motion.div
@@ -883,6 +1023,11 @@ function NoAvailability() {
     </motion.div>
   );
 }
+
+
+/* ─────────────────────────────────────────────
+   DATE NAVIGATION
+───────────────────────────────────────────── */
 
 function DateNavigationButton({
   label,
@@ -939,7 +1084,14 @@ function DateNavigationButton({
   );
 }
 
-function groupSlots(slots: BookingSlot[]) {
+
+/* ─────────────────────────────────────────────
+   GROUP SLOTS
+───────────────────────────────────────────── */
+
+function groupSlots(
+  slots: BookingSlot[],
+) {
   const groups = {
     Morning: [] as BookingSlot[],
     Afternoon: [] as BookingSlot[],
@@ -961,14 +1113,22 @@ function groupSlots(slots: BookingSlot[]) {
   }
 
   return Object.entries(groups)
-    .filter(([, groupSlots]) =>
-      groupSlots.length > 0,
+    .filter(
+      ([, groupSlots]) =>
+        groupSlots.length > 0,
     )
-    .map(([label, groupSlots]) => ({
-      label,
-      slots: groupSlots,
-    }));
+    .map(
+      ([label, groupSlots]) => ({
+        label,
+        slots: groupSlots,
+      }),
+    );
 }
+
+
+/* ─────────────────────────────────────────────
+   DATE CREATION
+───────────────────────────────────────────── */
 
 function createDateOptions(
   count: number,
@@ -992,6 +1152,7 @@ function createDateOptions(
 
     dates.push({
       value: date,
+
       weekday: new Intl.DateTimeFormat(
         "en-US",
         {
@@ -1030,6 +1191,11 @@ function createDateOptions(
   return dates;
 }
 
+
+/* ─────────────────────────────────────────────
+   LAGOS DATE
+───────────────────────────────────────────── */
+
 function getLagosToday(): string {
   const parts = new Intl.DateTimeFormat(
     "en-CA",
@@ -1056,6 +1222,11 @@ function getLagosToday(): string {
   return `${year}-${month}-${day}`;
 }
 
+
+/* ─────────────────────────────────────────────
+   ADD DAYS
+───────────────────────────────────────────── */
+
 function addDays(
   dateString: string,
   amount: number,
@@ -1081,6 +1252,37 @@ function addDays(
     ).padStart(2, "0"),
   ].join("-");
 }
+
+
+/* ─────────────────────────────────────────────
+   MONTH LABEL
+───────────────────────────────────────────── */
+
+function formatMonthLabel(
+  dateString?: string,
+): string {
+  if (!dateString) {
+    return "";
+  }
+
+  const date = new Date(
+    `${dateString}T12:00:00Z`,
+  );
+
+  return new Intl.DateTimeFormat(
+    "en-US",
+    {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    },
+  ).format(date);
+}
+
+
+/* ─────────────────────────────────────────────
+   LONG DATE
+───────────────────────────────────────────── */
 
 function formatLongDate(
   dateString: string,

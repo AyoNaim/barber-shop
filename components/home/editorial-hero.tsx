@@ -473,7 +473,7 @@ export function EditorialHero() {
 function MagneticButton() {
   return (
     <motion.a
-      href="#booking"
+      href="/booking"
       whileHover={{
         scale: 1.02,
       }}
